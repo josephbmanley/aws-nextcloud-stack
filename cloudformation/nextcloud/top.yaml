@@ -1,0 +1,51 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: NextCloud ECS Infrastructure
+Parameters:
+  #------------------------
+  # Deployment Information
+  #------------------------
+  environment:
+    Type: String
+    Description: Name of the environment to use in naming.
+    Default: production
+  release:
+    Type: String
+    Description: Name of the release name of the stack version to use.
+    Default: production
+    AllowedValues: ['develop', 'stage', 'production']
+    ConstraintDescription: "Must be a possible release version."
+  AsgDesiredCapacity:
+    Type: Number
+    Default: 1
+
+  #------------
+  # Networking
+  #------------
+  VpcId:
+    Description: ID of the VPC
+    Type: AWS::EC2::VPC::Id
+  PublicSubnets:
+    Description: The public subnets for the ALB to run in. (Space seperated)
+    Type: String
+
+  #------------
+  # CloudWatch
+  #------------
+  LogGroup:
+    Type: String
+    Description: The AWS CloudWatch log group to output logs to.
+    Default: "/ecs/nextcloud"
+
+Resources:
+  EcsCluster:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://s3.${AWS::Region}.amazonaws.com/sumu-stacks/${release}/cloudformation/cluster/top.yaml'
+      Parameters:
+        Environment: !Ref environment
+        VpcId: !Ref VpcId
+        SubnetIds: !Join [",", !Split [" ", !Ref PublicSubnets]]
+        Project: "NextCloud"
+        AsgDesiredCapacity: !Ref AsgDesiredCapacity
+        InstanceType: t3a.micro
