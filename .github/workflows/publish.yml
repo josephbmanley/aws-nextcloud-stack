@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout Repo
       uses: actions/checkout@v2.1.0
+      with:
+        submodules: 'true'
     - name: Ship to CloudFormation S3
       uses: jakejarvis/s3-sync-action@master
       with:
