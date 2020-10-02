@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: NextCloud ECS Task
+Parameters:
+  LogGroupName:
+    Type: String
+    Description: The AWS CloudWatch log group to output logs to.
+    Default: "/ecs/nextcloud"
+
+  environment:
+    Type: String
+    Description: Name of the environment to use in naming.
+    Default: production
+
+  DockerTag:
+    Description: Tag in DockerHub to deploy
+    Type: String
+    Default: "latest"
+  
+  TaskExecutionRole:
+    Description: IAM Role used by ECS Tasks
+    Type: String
+
+Resources:
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 7
+      LogGroupName: !Sub "${LogGroupName}/${environment}"
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref TaskExecutionRole
+      Family: !Sub "NextCloud-${environment}"
+      ContainerDefinitions:
+      - Name: nextcloud
+        Essential: 'true'
+        Image: !Sub "nextcloud:${DockerTag}"
+        MemoryReservation: 100
+        PortMappings:
+        - HostPort: 0
+          ContainerPort: 80
+          Protocol: tcp
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-group:
+              Ref: LogGroup
+Outputs:
+  TaskArn:
+    Description: ARN of the TaskDefinition
+    Value: !Ref TaskDefinition
+  TaskFamily:
+    Description: Family of the TaskDefinition 
+    Value: !Sub "NextCloud-${environment}"

@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: NextCloud ECS IAM Permissions
+Parameters:
+  #------------------------
+  # Deployment Information
+  #------------------------
+  environment:
+    Type: String
+    Description: Name of the environment to use in naming.
+    Default: production
+
+Resources:
+  EcsExecutionerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ecs-tasks.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      RoleName: !Sub 'NextCloud-TaskExecutioner-${environment}'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+Outputs:
+  EcsExecutioner:
+    Description: IAM Role used by ECS Tasks
+    Value: !GetAtt EcsExecutionerRole.Arn
